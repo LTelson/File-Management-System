@@ -12,6 +12,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -59,8 +61,34 @@ public class FileBrowserPanel extends JPanel {
         this.currentDirectory = fileSystemService.getStartDirectory();
         loadDirectory(currentDirectory);
 
-        //TODO: wire Up button + double-click navigation in next step
+        //Up directory navigation
         upButton.addActionListener(e -> navigateUp());
+
+        //Double-click navigation
+        fileList.addMouseListener(new MouseAdapter() {
+        @Override
+            public void mouseClicked(MouseEvent e){
+            //Left mouse double click
+            if (e.getClickCount() == 2 && !e.isConsumed()){
+                e.consume();
+                int index = fileList.locationToIndex(e.getPoint());
+                if (index >= 0) {
+                    FileItem selected = listModel.getElementAt(index);
+                    handleItemDoubleClick(selected);
+                }
+            }
+        }
+        });
+    }
+
+    //Handle double click
+    private void handleItemDoubleClick(FileItem item){
+        if (item.isDirectory()){
+            loadDirectory(item.getPath());
+        } else{
+            setStatus("Selected file: " + item.getName());
+            //TO-DO: Trigger file open / content load
+        }
     }
 
     private void loadDirectory(Path directory) {
