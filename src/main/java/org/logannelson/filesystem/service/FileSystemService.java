@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface FileSystemService {
 
-    /** Returns the starting directory.
+    // Returns the starting directory.
     Path getStartDirectory();
 
     /** Returns the children of the given directory.

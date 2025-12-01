@@ -1,5 +1,8 @@
 package org.logannelson.filesystem.ui;
 
+import org.logannelson.filesystem.service.FileSystemService;
+import org.logannelson.filesystem.service.FileSystemServiceImpl;
+
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -10,8 +13,14 @@ import java.awt.BorderLayout;
 
 public class MainFrame extends JFrame {
 
+    private final FileSystemService fileSystemService;
+    private final StatusBarPanel statusBarPanel;
+
     public MainFrame() {
         super("File Management System");
+
+        this.fileSystemService = new FileSystemServiceImpl();
+        this.statusBarPanel = new StatusBarPanel();
 
         initFrameSettings();
         initMenuBar();
@@ -19,10 +28,9 @@ public class MainFrame extends JFrame {
     }
 
     private void initFrameSettings() {
-        //Basic window behavior
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setSize(1000, 600);
-        setLocationRelativeTo(null); //enter on screen
+        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
     }
 
@@ -50,26 +58,22 @@ public class MainFrame extends JFrame {
 
         setJMenuBar(menuBar);
 
-        //Wiring actions will come later
+        //Wiring these menu later.
     }
 
     private void initLayout() {
-        // Left: file browser (placeholder for now)
-        FileBrowserPanel browserPanel = new FileBrowserPanel();
+        //File browser panel gets the service + a way to report status
+        FileBrowserPanel browserPanel =
+                new FileBrowserPanel(fileSystemService, statusBarPanel::setStatusMessage);
 
-        // Right: file content (placeholder for now)
         FileContentPanel contentPanel = new FileContentPanel();
 
-        //Split pane between browser (left) and content (right)
         JSplitPane splitPane = new JSplitPane(
                 JSplitPane.HORIZONTAL_SPLIT,
                 browserPanel,
                 contentPanel
         );
         splitPane.setDividerLocation(300);
-
-        //Status bar at the bottom
-        StatusBarPanel statusBarPanel = new StatusBarPanel();
 
         add(splitPane, BorderLayout.CENTER);
         add(statusBarPanel, BorderLayout.SOUTH);
