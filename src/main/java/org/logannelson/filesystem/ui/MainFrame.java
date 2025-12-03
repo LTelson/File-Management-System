@@ -82,6 +82,7 @@ public class MainFrame extends JFrame {
                         }
                 );
 
+
         JSplitPane splitPane = new JSplitPane(
                 JSplitPane.HORIZONTAL_SPLIT,
                 browserPanel,

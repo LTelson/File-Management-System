@@ -46,6 +46,6 @@ public class FileSystemServiceImpl implements FileSystemService {
 
     @Override
     public String readFile(Path file) throws IOException {
-        return Files.readString(file);
+        return java.nio.file.Files.readString(file);
     }
 }

@@ -1,12 +1,16 @@
 package org.logannelson.filesystem.ui;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import java.awt.BorderLayout;
 import java.nio.file.Path;
 
 public class FileContentPanel extends JPanel {
 
-    private  final JLabel filePathLabel;
+    private final JLabel filePathLabel;
     private final JTextArea textArea;
     private Path currentFile;
 
@@ -15,18 +19,23 @@ public class FileContentPanel extends JPanel {
 
         setBorder(BorderFactory.createTitledBorder("File Content"));
 
-        filePathLabel = new JLabel("No file selected:");
+        //Top: file path label
+        filePathLabel = new JLabel("No file selected");
         add(filePathLabel, BorderLayout.NORTH);
 
-
+        //Center: text area inside scroll pane
         textArea = new JTextArea();
-        textArea.setEditable(true); //TO-DO: add editing support
-        add(new JLabel("File content viewer/editor goes here"), BorderLayout.CENTER);
+        textArea.setEditable(true);
+
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void displayFile(Path file, String content) {
         this.currentFile = file;
         filePathLabel.setText(file.toString());
+
+        //DEBUG
         textArea.setText(content);
         textArea.setCaretPosition(0); // scroll to top
     }
