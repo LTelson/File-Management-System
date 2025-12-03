@@ -17,6 +17,9 @@ public class MainFrame extends JFrame {
     private final FileSystemService fileSystemService;
     private final StatusBarPanel statusBarPanel;
 
+    private FileBrowserPanel browserPanel;
+    private FileContentPanel contentPanel;
+
     public MainFrame() {
         super("File Management System");
 
@@ -24,8 +27,8 @@ public class MainFrame extends JFrame {
         this.statusBarPanel = new StatusBarPanel();
 
         initFrameSettings();
-        initMenuBar();
-        initLayout();
+        initLayout(); //Now create the panels first
+        initMenuBar(); //Then wire menu actions
     }
 
     private void initFrameSettings() {
@@ -64,13 +67,13 @@ public class MainFrame extends JFrame {
 
     private void initLayout() {
         // Right side: content panel gets the service and now status reporter
-        FileContentPanel contentPanel = new FileContentPanel(
+        this.contentPanel = new FileContentPanel(
                 fileSystemService,
                 statusBarPanel::setStatusMessage
         );
 
         // Left side: browser panel; provide callback for when a file is opened
-        FileBrowserPanel browserPanel =
+        this.browserPanel =
                 new FileBrowserPanel(
                         fileSystemService,
                         statusBarPanel::setStatusMessage,
