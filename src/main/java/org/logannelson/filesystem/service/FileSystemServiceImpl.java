@@ -48,4 +48,10 @@ public class FileSystemServiceImpl implements FileSystemService {
     public String readFile(Path file) throws IOException {
         return java.nio.file.Files.readString(file);
     }
+
+    @Override
+    public void writeFile(Path file, String content) throws IOException{
+        //Simple overwrite.
+        Files.writeString(file, content);
+    }
 }
