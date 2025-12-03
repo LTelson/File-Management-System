@@ -127,4 +127,14 @@ public class FileBrowserPanel extends JPanel {
             statusConsumer.accept(message);
         }
     }
+
+    public Path getCurrentDirectory() {
+        return currentDirectory;
+    }
+
+    public void reloadCurrentDirectory() {
+        if (currentDirectory != null){
+            loadDirectory(currentDirectory);
+        }
+    }
 }
