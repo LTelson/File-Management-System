@@ -1,6 +1,6 @@
 package org.logannelson.filesystem.ui;
 
-import  org.logannelson.filesystem.model.FileItem;
+import org.logannelson.filesystem.model.FileItem;
 import org.logannelson.filesystem.service.FileSystemService;
 
 import javax.swing.BorderFactory;
@@ -28,7 +28,7 @@ public class FileBrowserPanel extends JPanel {
     private final JLabel currentPathLabel;
     private final DefaultListModel<FileItem> listModel;
     private final JList<FileItem> fileList;
-
+    private final Path rootDirectory; //Guard rails
     private Path currentDirectory;
 
     public FileBrowserPanel(FileSystemService fileSystemService,
@@ -40,6 +40,9 @@ public class FileBrowserPanel extends JPanel {
         this.fileOpenConsumer = fileOpenConsumer;
 
         setBorder(BorderFactory.createTitledBorder("File Browser"));
+
+        //Start directory for the browser
+        this.rootDirectory = fileSystemService.getStartDirectory();
 
         //Top bar: "Current path" and Up button
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -61,11 +64,11 @@ public class FileBrowserPanel extends JPanel {
         fileList = new JList<>(listModel);
         add(new JScrollPane(fileList), BorderLayout.CENTER);
 
-        //Initially load the start directory
-        this.currentDirectory = fileSystemService.getStartDirectory();
+        //Initially load the root/start directory
+        this.currentDirectory = rootDirectory; //Use new sandbox root
         loadDirectory(currentDirectory);
 
-        //Up directory navigation
+        //Up directory navigation, but not above guard rail
         upButton.addActionListener(e -> navigateUp());
 
         //Double-click navigation / open
@@ -114,17 +117,17 @@ public class FileBrowserPanel extends JPanel {
     }
 
     private void navigateUp() {
-        Path parent = currentDirectory.getParent();
-        if (parent != null) {
-            loadDirectory(parent);
-        } else {
+        //Make sure user does not go above safe root
+        if (currentDirectory == null || currentDirectory.equals(rootDirectory)) {
             setStatus("Already at top-level directory.");
+            return;
         }
-    }
 
-    private void setStatus(String message) {
-        if (statusConsumer != null) {
-            statusConsumer.accept(message);
+        Path parent = currentDirectory.getParent();
+        if (parent != null && parent.toAbsolutePath().normalize().startsWith(rootDirectory)) {
+            loadDirectory(parent); //User stays within sandbox root.
+        } else {
+            setStatus("Cannot go above root directory."); //Safety message
         }
     }
 
@@ -140,5 +143,11 @@ public class FileBrowserPanel extends JPanel {
 
     public FileItem getSelectedItem(){
         return fileList.getSelectedValue();
+    }
+
+    private void setStatus(String message) {
+        if (statusConsumer != null) {
+            statusConsumer.accept(message);
+        }
     }
 }

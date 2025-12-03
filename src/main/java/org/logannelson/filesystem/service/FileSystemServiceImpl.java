@@ -2,7 +2,6 @@ package org.logannelson.filesystem.service;
 
 import org.logannelson.filesystem.model.FileItem;
 
-import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,18 +12,54 @@ import java.util.stream.Stream;
 
 public class FileSystemServiceImpl implements FileSystemService {
 
+    /**
+     * All file operations are restricted to this root directory.
+     * This prevents the app from modifying system files or anything
+     * outside the sandbox.
+     */
+    private final Path rootDirectory;
+
+    public FileSystemServiceImpl() {
+        //Sandbox root: <user.home>/FileSystemSandbox
+        this.rootDirectory = Path
+                .of(System.getProperty("user.home"), "FileSystemSandbox")
+                .toAbsolutePath()
+                .normalize();
+
+        try {
+            Files.createDirectories(rootDirectory);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to initialize sandbox root: " + rootDirectory, e);
+        }
+    }
+
+    /**
+     * Ensures the given path stays under the sandbox root.
+     * Returns a normalized absolute path if allowed, otherwise throws.
+     */
+    private Path ensureUnderRoot(Path path) throws IOException {
+        Path normalizedRoot = rootDirectory;
+        Path normalizedPath = path.toAbsolutePath().normalize();
+
+        if (!normalizedPath.startsWith(normalizedRoot)) {
+            throw new IOException("Operation outside sandbox is not allowed: " + normalizedPath);
+        }
+        return normalizedPath;
+    }
+
     @Override
     public Path getStartDirectory() {
-        //Start in the user's home directory
-        return Path.of(System.getProperty("user.home"));
+        // Start in the sandbox root
+        return rootDirectory;
     }
 
     @Override
     public List<FileItem> listDirectory(Path directory) throws IOException {
+        Path dir = ensureUnderRoot(directory);
+
         List<FileItem> items = new ArrayList<>();
 
-        //Use a stream to list directory contents
-        try (Stream<Path> stream = Files.list(directory)) {
+        try (Stream<Path> stream = Files.list(dir)) {
             stream.forEach(path -> {
                 try {
                     BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
@@ -47,54 +82,62 @@ public class FileSystemServiceImpl implements FileSystemService {
 
     @Override
     public String readFile(Path file) throws IOException {
-        return java.nio.file.Files.readString(file);
+        Path safeFile = ensureUnderRoot(file);
+        return Files.readString(safeFile);
     }
 
     @Override
-    public void writeFile(Path file, String content) throws IOException{
-        //Simple overwrite.
-        Files.writeString(file, content);
+    public void writeFile(Path file, String content) throws IOException {
+        Path safeFile = ensureUnderRoot(file);
+        Files.writeString(safeFile, content);
     }
 
     @Override
     public Path createDirectory(Path parentDirectory, String name) throws IOException {
-        Path newDir = parentDirectory.resolve(name);
+        Path safeParent = ensureUnderRoot(parentDirectory);
+        Path newDir = safeParent.resolve(name);
         return Files.createDirectory(newDir);
     }
 
     @Override
-    public Path createFile(Path parentDirectory, String name, String initialContent) throws IOException{
-        Path newFile = parentDirectory.resolve(name);
+    public Path createFile(Path parentDirectory, String name, String initialContent) throws IOException {
+        Path safeParent = ensureUnderRoot(parentDirectory);
+        Path newFile = safeParent.resolve(name);
         Path created = Files.createFile(newFile);
 
         if (initialContent != null && !initialContent.isEmpty()){
             Files.writeString(created, initialContent);
         }
+
         return created;
     }
 
     @Override
-    public Path rename(Path target, String newName) throws IOException{
-        Path parent = target.getParent();
+    public Path rename(Path target, String newName) throws IOException {
+        Path safeTarget = ensureUnderRoot(target);
+        Path parent = safeTarget.getParent();
         if (parent == null) {
-            throw new IOException("Cannot rename root path: " + target);
+            throw new IOException("Cannot rename root path: " + safeTarget);
         }
-        Path newPath = parent.resolve(newName);
-        return Files.move(target, newPath);
+        Path newPath = parent.resolve(newName).toAbsolutePath().normalize();
+        ensureUnderRoot(newPath);
+        return Files.move(safeTarget, newPath);
     }
 
     @Override
     public void delete(Path target) throws IOException {
-        if (Files.isDirectory(target)) {
-            //Recursively delete directory contents first
-            try (var walk = Files.walk(target)) {
+        Path safeTarget = ensureUnderRoot(target);
 
-                walk.sorted((p1, p2) -> p2.getNameCount() - p1.getNameCount())
+        if (Files.isDirectory(safeTarget)) {
+            //Recursively delete directory contents first
+            try (var walk = Files.walk(safeTarget)) {
+                walk
+                        // delete children before parents
+                        .sorted((p1, p2) -> p2.getNameCount() - p1.getNameCount())
                         .forEach(path -> {
                             try {
                                 Files.delete(path);
                             } catch (IOException e) {
-                                //Re-throw as unchecked. outer method declares IOException
                                 throw new RuntimeException(e);
                             }
                         });
@@ -105,8 +148,7 @@ public class FileSystemServiceImpl implements FileSystemService {
                 throw e;
             }
         } else {
-            Files.delete(target);
+            Files.delete(safeTarget);
         }
     }
-
 }
