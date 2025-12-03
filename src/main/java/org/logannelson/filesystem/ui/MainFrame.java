@@ -3,14 +3,10 @@ package org.logannelson.filesystem.ui;
 import org.logannelson.filesystem.service.FileSystemService;
 import org.logannelson.filesystem.service.FileSystemServiceImpl;
 
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JSplitPane;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import java.awt.BorderLayout;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class MainFrame extends JFrame {
 
@@ -46,6 +42,11 @@ public class MainFrame extends JFrame {
         JMenuItem newFolderItem = new JMenuItem("New Folder");
         JMenuItem exitItem = new JMenuItem("Exit");
 
+        //WIRE ACTIONS
+        newFileItem.addActionListener(e -> createNewFile());
+        newFolderItem.addActionListener(e -> createNewFolder());
+        exitItem.addActionListener(e -> dispose());
+
         fileMenu.add(newFileItem);
         fileMenu.add(newFolderItem);
         fileMenu.addSeparator();
@@ -62,7 +63,6 @@ public class MainFrame extends JFrame {
 
         setJMenuBar(menuBar);
 
-        //Wiring menu actions later.
     }
 
     private void initLayout() {
@@ -102,4 +102,97 @@ public class MainFrame extends JFrame {
         add(statusBarPanel, BorderLayout.SOUTH);
     }
 
+    //Helper for createNewFile
+    private void createNewFile() {
+        if (browserPanel == null) {
+            statusBarPanel.setStatusMessage("File browser not ready.");
+            return;
+        }
+
+        Path currentDir = browserPanel.getCurrentDirectory();
+        if (currentDir == null) {
+            statusBarPanel.setStatusMessage("No directory selected.");
+            return;
+        }
+
+        String name = JOptionPane.showInputDialog(
+                this,
+                "Enter new file name:",
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (name == null) {
+            //If user cancels
+            statusBarPanel.setStatusMessage("File creation cancelled.");
+            return;
+        }
+
+        name = name.trim();
+        if (name.isEmpty()) {
+            statusBarPanel.setStatusMessage("File name cannot be empty.");
+            return;
+        }
+
+        try {
+            fileSystemService.createFile(currentDir, name, "");
+            browserPanel.reloadCurrentDirectory();
+            statusBarPanel.setStatusMessage("Created file: " + currentDir.resolve(name));
+        } catch (IOException e) {
+            statusBarPanel.setStatusMessage("Error creating file: " + e.getMessage());
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to create file:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+
+
+    }
+
+    private void createNewFolder() {
+        if (browserPanel == null) {
+            statusBarPanel.setStatusMessage("File browser not ready.");
+            return;
+        }
+
+        Path currentDir = browserPanel.getCurrentDirectory();
+        if (currentDir == null) {
+            statusBarPanel.setStatusMessage("No directory selected.");
+            return;
+        }
+
+        String name = JOptionPane.showInputDialog(
+                this,
+                "Enter new folder name:",
+                "New Folder",
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (name == null) {
+            // User cancelled
+            statusBarPanel.setStatusMessage("Folder creation cancelled.");
+            return;
+        }
+
+        name = name.trim();
+        if (name.isEmpty()) {
+            statusBarPanel.setStatusMessage("Folder name cannot be empty.");
+            return;
+        }
+
+        try {
+            fileSystemService.createDirectory(currentDir, name);
+            browserPanel.reloadCurrentDirectory();
+            statusBarPanel.setStatusMessage("Created folder: " + currentDir.resolve(name));
+        } catch (IOException e) {
+            statusBarPanel.setStatusMessage("Error creating folder: " + e.getMessage());
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to create folder:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
 }
