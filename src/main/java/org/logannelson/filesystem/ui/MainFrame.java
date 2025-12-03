@@ -63,8 +63,11 @@ public class MainFrame extends JFrame {
     }
 
     private void initLayout() {
-        // Right side: content panel
-        FileContentPanel contentPanel = new FileContentPanel();
+        // Right side: content panel gets the service and now status reporter
+        FileContentPanel contentPanel = new FileContentPanel(
+                fileSystemService,
+                statusBarPanel::setStatusMessage
+        );
 
         // Left side: browser panel; provide callback for when a file is opened
         FileBrowserPanel browserPanel =
@@ -74,14 +77,16 @@ public class MainFrame extends JFrame {
                         fileItem -> {
                             try {
                                 String content = fileSystemService.readFile(fileItem.getPath());
+                                statusBarPanel.setStatusMessage(
+                                        "Opened file: " + fileItem.getPath() +
+                                                " (length: " + content.length() + ")"
+                                );
                                 contentPanel.displayFile(fileItem.getPath(), content);
-                                statusBarPanel.setStatusMessage("Opened file: " + fileItem.getPath());
                             } catch (IOException e) {
                                 statusBarPanel.setStatusMessage("Error reading file: " + e.getMessage());
                             }
                         }
                 );
-
 
         JSplitPane splitPane = new JSplitPane(
                 JSplitPane.HORIZONTAL_SPLIT,
@@ -93,4 +98,5 @@ public class MainFrame extends JFrame {
         add(splitPane, BorderLayout.CENTER);
         add(statusBarPanel, BorderLayout.SOUTH);
     }
+
 }
