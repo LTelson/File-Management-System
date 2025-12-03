@@ -23,5 +23,17 @@ public interface FileSystemService {
     Overwrites existing content!!!
     * */
     void writeFile(Path file, String content) throws IOException;
+
+    /*
+    * Creates a new empty directory with the given name in the parent directory
+    * Returns path to created directory
+    * */
+    Path createDirectory(Path parentDirectory, String name) throws IOException;
+
+    /*
+    * Creates a new file with the given name and initial content in the parent directory
+    * Returns the path to the created file
+    * */
+    Path createFile(Path parentDirectory, String name, String initialContent) throws IOException;
 }
 
