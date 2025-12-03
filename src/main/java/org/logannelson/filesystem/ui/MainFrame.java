@@ -55,6 +55,10 @@ public class MainFrame extends JFrame {
         JMenu editMenu = new JMenu("Edit");
         JMenuItem renameItem = new JMenuItem("Rename");
         JMenuItem deleteItem = new JMenuItem("Delete");
+
+        renameItem.addActionListener(e -> renameSelectedItem());
+        deleteItem.addActionListener(e -> deleteSelectedItem());
+
         editMenu.add(renameItem);
         editMenu.add(deleteItem);
 
@@ -195,4 +199,110 @@ public class MainFrame extends JFrame {
             );
         }
     }
+
+    private void renameSelectedItem() {
+        if (browserPanel == null) {
+            statusBarPanel.setStatusMessage("File browser not ready.");
+            return;
+        }
+
+        var selected = browserPanel.getSelectedItem();
+        if (selected == null) {
+            statusBarPanel.setStatusMessage("No file or folder selected to rename.");
+            return;
+        }
+
+        String oldName = selected.getName();
+        String newName = JOptionPane.showInputDialog(
+                this,
+                "Enter new name:",
+                oldName
+        );
+
+        if (newName == null) {
+            statusBarPanel.setStatusMessage("Rename cancelled.");
+            return;
+        }
+
+        newName = newName.trim();
+        if (newName.isEmpty()) {
+            statusBarPanel.setStatusMessage("New name cannot be empty.");
+            return;
+        }
+
+        try {
+            Path oldPath = selected.getPath();
+            Path newPath = fileSystemService.rename(oldPath, newName);
+            statusBarPanel.setStatusMessage("Renamed to: " + newPath);
+
+            //If this file is currently open in the content panel, update the label/content path
+            Path openFile = contentPanel.getCurrentFile();
+            if (openFile != null && openFile.equals(oldPath)) {
+                //Just update the label path. Content stays the same
+                contentPanel.displayFile(newPath, contentPanel.getCurrentContent());
+            }
+
+            browserPanel.reloadCurrentDirectory();
+        } catch (IOException e) {
+            statusBarPanel.setStatusMessage("Error renaming: " + e.getMessage());
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to rename:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void deleteSelectedItem() {
+        if (browserPanel == null) {
+            statusBarPanel.setStatusMessage("File browser not ready.");
+            return;
+        }
+
+        var selected = browserPanel.getSelectedItem();
+        if (selected == null) {
+            statusBarPanel.setStatusMessage("No file or folder selected to delete.");
+            return;
+        }
+
+        Path target = selected.getPath();
+        String message = selected.isDirectory()
+                ? "Delete this folder and all its contents?\n" + target
+                : "Delete this file?\n" + target;
+
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                message,
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (choice != JOptionPane.YES_OPTION) {
+            statusBarPanel.setStatusMessage("Delete cancelled.");
+            return;
+        }
+
+        try {
+            //If the open file is being deleted, clear the content panel
+            Path openFile = contentPanel.getCurrentFile();
+            if (openFile != null && openFile.equals(target)) {
+                contentPanel.clearContent();
+            }
+
+            fileSystemService.delete(target);
+            browserPanel.reloadCurrentDirectory();
+            statusBarPanel.setStatusMessage("Deleted: " + target);
+        } catch (IOException e) {
+            statusBarPanel.setStatusMessage("Error deleting: " + e.getMessage());
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to delete:\n" + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
 }
