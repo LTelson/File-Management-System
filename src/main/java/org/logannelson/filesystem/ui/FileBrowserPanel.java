@@ -137,4 +137,8 @@ public class FileBrowserPanel extends JPanel {
             loadDirectory(currentDirectory);
         }
     }
+
+    public FileItem getSelectedItem(){
+        return fileList.getSelectedValue();
+    }
 }
