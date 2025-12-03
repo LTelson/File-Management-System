@@ -35,5 +35,17 @@ public interface FileSystemService {
     * Returns the path to the created file
     * */
     Path createFile(Path parentDirectory, String name, String initialContent) throws IOException;
+
+    /*
+    * Renamed a file or directory to the given name
+    * Returns to new path
+    * */
+    Path rename(Path target, String newName) throws  IOException;
+
+    /*
+    * Deletes a file or directory. Directories deleted recursively.
+    * */
+    void delete(Path target) throws IOException;
+
 }
 
