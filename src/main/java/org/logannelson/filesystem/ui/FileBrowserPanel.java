@@ -1,6 +1,6 @@
 package org.logannelson.filesystem.ui;
 
-import org.logannelson.filesystem.model.FileItem;
+import  org.logannelson.filesystem.model.FileItem;
 import org.logannelson.filesystem.service.FileSystemService;
 
 import javax.swing.BorderFactory;
