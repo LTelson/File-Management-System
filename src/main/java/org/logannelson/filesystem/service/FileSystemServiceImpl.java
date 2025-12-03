@@ -2,6 +2,7 @@ package org.logannelson.filesystem.service;
 
 import org.logannelson.filesystem.model.FileItem;
 
+import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,5 +54,22 @@ public class FileSystemServiceImpl implements FileSystemService {
     public void writeFile(Path file, String content) throws IOException{
         //Simple overwrite.
         Files.writeString(file, content);
+    }
+
+    @Override
+    public Path createDirectory(Path parentDirectory, String name) throws IOException {
+        Path newDir = parentDirectory.resolve(name);
+        return Files.createDirectory(newDir);
+    }
+
+    @Override
+    public Path createFile(Path parentDirectory, String name, String initialContent) throws IOException{
+        Path newFile = parentDirectory.resolve(name);
+        Path created = Files.createFile(newFile);
+
+        if (initialContent != null && !initialContent.isEmpty()){
+            Files.writeString(created, initialContent);
+        }
+        return created;
     }
 }
