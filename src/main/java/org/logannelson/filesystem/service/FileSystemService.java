@@ -17,5 +17,11 @@ public interface FileSystemService {
 
     //Reads the entire contents of a text file as a String
     String readFile(Path file) throws IOException;
+
+    /*
+    Writes the given text content into selected file.
+    Overwrites existing content!!!
+    * */
+    void writeFile(Path file, String content) throws IOException;
 }
 
