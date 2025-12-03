@@ -14,5 +14,8 @@ public interface FileSystemService {
     /** Returns the children of the given directory.
      */
     List<FileItem> listDirectory(Path directory) throws IOException;
+
+    //Reads the entire contents of a text file as a String
+    String readFile(Path file) throws IOException;
 }
 

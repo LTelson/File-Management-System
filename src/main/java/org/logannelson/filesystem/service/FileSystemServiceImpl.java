@@ -43,4 +43,9 @@ public class FileSystemServiceImpl implements FileSystemService {
 
         return items;
     }
+
+    @Override
+    public String readFile(Path file) throws IOException {
+        return Files.readString(file);
+    }
 }
