@@ -72,4 +72,41 @@ public class FileSystemServiceImpl implements FileSystemService {
         }
         return created;
     }
+
+    @Override
+    public Path rename(Path target, String newName) throws IOException{
+        Path parent = target.getParent();
+        if (parent == null) {
+            throw new IOException("Cannot rename root path: " + target);
+        }
+        Path newPath = parent.resolve(newName);
+        return Files.move(target, newPath);
+    }
+
+    @Override
+    public void delete(Path target) throws IOException {
+        if (Files.isDirectory(target)) {
+            //Recursively delete directory contents first
+            try (var walk = Files.walk(target)) {
+
+                walk.sorted((p1, p2) -> p2.getNameCount() - p1.getNameCount())
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                //Re-throw as unchecked. outer method declares IOException
+                                throw new RuntimeException(e);
+                            }
+                        });
+            } catch (RuntimeException e) {
+                if (e.getCause() instanceof IOException io) {
+                    throw io;
+                }
+                throw e;
+            }
+        } else {
+            Files.delete(target);
+        }
+    }
+
 }
