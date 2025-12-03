@@ -10,6 +10,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JSplitPane;
 import javax.swing.WindowConstants;
 import java.awt.BorderLayout;
+import java.io.IOException;
 
 public class MainFrame extends JFrame {
 
@@ -58,15 +59,28 @@ public class MainFrame extends JFrame {
 
         setJMenuBar(menuBar);
 
-        //Wiring these menu later.
+        //Wiring menu actions later.
     }
 
     private void initLayout() {
-        //File browser panel gets the service + a way to report status
-        FileBrowserPanel browserPanel =
-                new FileBrowserPanel(fileSystemService, statusBarPanel::setStatusMessage);
-
+        // Right side: content panel
         FileContentPanel contentPanel = new FileContentPanel();
+
+        // Left side: browser panel; provide callback for when a file is opened
+        FileBrowserPanel browserPanel =
+                new FileBrowserPanel(
+                        fileSystemService,
+                        statusBarPanel::setStatusMessage,
+                        fileItem -> {
+                            try {
+                                String content = fileSystemService.readFile(fileItem.getPath());
+                                contentPanel.displayFile(fileItem.getPath(), content);
+                                statusBarPanel.setStatusMessage("Opened file: " + fileItem.getPath());
+                            } catch (IOException e) {
+                                statusBarPanel.setStatusMessage("Error reading file: " + e.getMessage());
+                            }
+                        }
+                );
 
         JSplitPane splitPane = new JSplitPane(
                 JSplitPane.HORIZONTAL_SPLIT,

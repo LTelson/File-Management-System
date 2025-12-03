@@ -23,6 +23,7 @@ public class FileBrowserPanel extends JPanel {
 
     private final FileSystemService fileSystemService;
     private final Consumer<String> statusConsumer;
+    private final Consumer<FileItem> fileOpenConsumer;
 
     private final JLabel currentPathLabel;
     private final DefaultListModel<FileItem> listModel;
@@ -30,10 +31,13 @@ public class FileBrowserPanel extends JPanel {
 
     private Path currentDirectory;
 
-    public FileBrowserPanel(FileSystemService fileSystemService, Consumer<String> statusConsumer) {
+    public FileBrowserPanel(FileSystemService fileSystemService,
+                            Consumer<String> statusConsumer,
+                            Consumer<FileItem> fileOpenConsumer) {
         super(new BorderLayout());
         this.fileSystemService = fileSystemService;
         this.statusConsumer = statusConsumer;
+        this.fileOpenConsumer = fileOpenConsumer;
 
         setBorder(BorderFactory.createTitledBorder("File Browser"));
 
@@ -64,30 +68,31 @@ public class FileBrowserPanel extends JPanel {
         //Up directory navigation
         upButton.addActionListener(e -> navigateUp());
 
-        //Double-click navigation
+        //Double-click navigation / open
         fileList.addMouseListener(new MouseAdapter() {
-        @Override
-            public void mouseClicked(MouseEvent e){
-            //Left mouse double click
-            if (e.getClickCount() == 2 && !e.isConsumed()){
-                e.consume();
-                int index = fileList.locationToIndex(e.getPoint());
-                if (index >= 0) {
-                    FileItem selected = listModel.getElementAt(index);
-                    handleItemDoubleClick(selected);
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                //Left mouse double click
+                if (e.getClickCount() == 2 && !e.isConsumed()) {
+                    e.consume();
+                    int index = fileList.locationToIndex(e.getPoint());
+                    if (index >= 0) {
+                        FileItem selected = listModel.getElementAt(index);
+                        handleItemDoubleClick(selected);
+                    }
                 }
             }
-        }
         });
     }
 
-    //Handle double click
-    private void handleItemDoubleClick(FileItem item){
-        if (item.isDirectory()){
+    private void handleItemDoubleClick(FileItem item) {
+        if (item.isDirectory()) {
             loadDirectory(item.getPath());
-        } else{
-            setStatus("Selected file: " + item.getName());
-            //TO-DO: Trigger file open / content load
+        } else {
+            setStatus("Opening file: " + item.getName());
+            if (fileOpenConsumer != null) {
+                fileOpenConsumer.accept(item);
+            }
         }
     }
 
