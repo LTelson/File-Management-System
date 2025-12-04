@@ -6,6 +6,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+/*
+* Section 2
+* Responsible for:
+* CRUD operations on the interface level
+* */
+
 public interface FileSystemService {
 
     // Returns the starting directory.

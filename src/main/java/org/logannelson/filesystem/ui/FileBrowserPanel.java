@@ -19,6 +19,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
+
+/*
+* Section 7
+* Displays directory contents, handles double-clock navigation and "up" button functionality.
+* */
 public class FileBrowserPanel extends JPanel {
 
     private final FileSystemService fileSystemService;
@@ -99,6 +104,10 @@ public class FileBrowserPanel extends JPanel {
         }
     }
 
+    /*
+    * Section 8
+    * Loads file/folder list into JList for given directory
+    * */
     private void loadDirectory(Path directory) {
         try {
             List<FileItem> items = fileSystemService.listDirectory(directory);
@@ -116,6 +125,10 @@ public class FileBrowserPanel extends JPanel {
         }
     }
 
+    /*
+    * Section 9
+    * Prevents navigation above the created sandbox root.
+    * */
     private void navigateUp() {
         //Make sure user does not go above safe root
         if (currentDirectory == null || currentDirectory.equals(rootDirectory)) {

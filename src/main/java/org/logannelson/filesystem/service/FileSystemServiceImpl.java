@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 public class FileSystemServiceImpl implements FileSystemService {
 
     /**
+     * Section 3
      * All file operations are restricted to this root directory.
      * This prevents the app from modifying system files or anything
      * outside the sandbox.
@@ -34,8 +35,9 @@ public class FileSystemServiceImpl implements FileSystemService {
     }
 
     /**
+     * Section 4
      * Ensures the given path stays under the sandbox root.
-     * Returns a normalized absolute path if allowed, otherwise throws.
+     * Returns a normalized absolute path if allowed, otherwise throws error.
      */
     private Path ensureUnderRoot(Path path) throws IOException {
         Path normalizedRoot = rootDirectory;
@@ -80,6 +82,10 @@ public class FileSystemServiceImpl implements FileSystemService {
         return items;
     }
 
+    /*
+    * Section 5
+    * The actual implementation of CRUD operations
+    * */
     @Override
     public String readFile(Path file) throws IOException {
         Path safeFile = ensureUnderRoot(file);
@@ -124,6 +130,11 @@ public class FileSystemServiceImpl implements FileSystemService {
         return Files.move(safeTarget, newPath);
     }
 
+    /*
+    * Section 6
+    * Recursive directory deletion.
+    * Contents are deleted before removing the directory.
+    * */
     @Override
     public void delete(Path target) throws IOException {
         Path safeTarget = ensureUnderRoot(target);
